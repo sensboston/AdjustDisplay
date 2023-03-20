@@ -1,6 +1,8 @@
 # AdjustDisplay
 Console application that allows you to change video modes, resolution, rotation, scale for all connected displays.
-Application should works with all connected displays, VGA/HDMI/DVI or wireless.
+Application should work with all types of connected displays, VGA/HDMI/DVI or wireless.
+Hovewer, some projection modes can prevent video mode and/or scale changes.
+From my tests, I was able to change anything I can change from built-in Windows UI dialogs and little bit more.
 
 ## Requrements:
 - Windows OSes (tested on Windows 10 with two monitors only)
