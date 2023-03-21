@@ -167,13 +167,33 @@ namespace AdjustDisplay
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true, BestFitMapping = false, ThrowOnUnmappableChar = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool EnumDisplayDevices([In, Out] string lpDevice, uint iDevNum, ref DISPLAY_DEVICE lpDisplayDevice, uint dwFlags);
+        public static extern bool EnumDisplayDevices(
+            [In, Out] 
+            string lpDevice, 
+            uint iDevNum, 
+            ref DISPLAY_DEVICE lpDisplayDevice, 
+            uint dwFlags);
 
         public const int ENUM_CURRENT_SETTINGS = -1;
         public const int DMDO_DEFAULT = 0;
         public const int DMDO_90 = 1;
         public const int DMDO_180 = 2;
         public const int DMDO_270 = 3;
+
+        public const int CDS_UPDATEREGISTRY = 0x01;
+        public const int CDS_TEST = 0x02;
+        public const int CDS_FULLSCREEN = 0x04;
+        public const int CDS_GLOBAL = 0x08;
+        public const int CDS_SET_PRIMARY = 0x10;
+        public const int CDS_RESET = 0x40000000;
+        public const int CDS_NORESET = 0x10000000;
+
+        public const int DM_BITSPERPEL = 0x00040000;
+        public const int DM_PELSWIDTH = 0x00080000;
+        public const int DM_PELSHEIGHT = 0x00100000;
+        public const int DM_DISPLAYFLAGS = 0x00200000;
+        public const int DM_DISPLAYFREQUENCY = 0x00400000;
+        public const int DM_POSITION = 0x00000020;
 
         [DllImport("user32.dll", SetLastError = true, BestFitMapping = false, ThrowOnUnmappableChar = true)]
         [return: MarshalAs(UnmanagedType.I4)]
@@ -183,6 +203,14 @@ namespace AdjustDisplay
             [param: MarshalAs(UnmanagedType.U4)]
             uint dwflags);
 
+        [DllImport("user32.dll", SetLastError = true, BestFitMapping = false, ThrowOnUnmappableChar = true)]
+        [return: MarshalAs(UnmanagedType.I4)]
+        public static extern int ChangeDisplaySettingsEx(
+            string lpszDeviceName, 
+            ref DEVMODE lpDevMode, 
+            IntPtr hwnd,
+            uint dwflags, 
+            IntPtr lParam);
 
         [DllImport("kernel32.dll", SetLastError = true, BestFitMapping = false, ThrowOnUnmappableChar = true)]
         [return: MarshalAs(UnmanagedType.Bool)]

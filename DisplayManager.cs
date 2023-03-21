@@ -85,9 +85,12 @@ namespace AdjustDisplay
         public void SetVideoMode(int dispIndex, int modeIndex)
         {
             if (dispIndex < 1 || dispIndex > Displays.Count) throw new Exception("Invalid display number");
-            if (modeIndex < 1 || modeIndex > _displays[dispIndex - 1].Modes.Count) throw new Exception("Invalid video mode");
-            var devMode = _displays[dispIndex - 1].Modes[modeIndex - 1].DevMode;
-            CheckResult((DisplayChangeResult)ChangeDisplaySettings(ref devMode, 0));
+            var display = _displays[dispIndex - 1];
+            if (modeIndex < 1 || modeIndex > display.Modes.Count) throw new Exception("Invalid video mode");
+            var devMode = display.Modes[modeIndex - 1].DevMode;
+            devMode.dmFields = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT | DM_DISPLAYFREQUENCY | DM_POSITION | DM_DISPLAYFLAGS;
+            CheckResult((DisplayChangeResult)ChangeDisplaySettingsEx(
+                display.DeviceName, ref devMode, IntPtr.Zero, CDS_UPDATEREGISTRY | CDS_RESET, IntPtr.Zero));
         }
 
         /// <summary>
@@ -104,11 +107,11 @@ namespace AdjustDisplay
         public void SetVideoMode(int dispIndex, int width, int height, int orient, int bpp, int freq, int scale)
         {
             if (dispIndex < 1 || dispIndex > Displays.Count) throw new Exception("Invalid display number");
-
+            var display = _displays[dispIndex - 1];
             // Do we need to change display mode?
             if (width > 0 || height > 0 || orient > -1 || bpp > 0 || freq > 0)
             {
-                var modes = new List<DisplayMode>(_displays[dispIndex - 1].Modes);
+                var modes = new List<DisplayMode>(display.Modes);
                 if (width > 0) modes = modes.Where(m => m.Width == width).ToList();
                 if (modes == null || modes.Count == 0) throw new Exception($"Can't find video mode with width={width}");
 
@@ -142,11 +145,13 @@ namespace AdjustDisplay
                 }
 
                 var devMode = mode.DevMode;
-                CheckResult((DisplayChangeResult)ChangeDisplaySettings(ref devMode, 0));
+                devMode.dmFields = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT | DM_DISPLAYFREQUENCY | DM_POSITION | DM_DISPLAYFLAGS;               
+                CheckResult((DisplayChangeResult)ChangeDisplaySettingsEx(
+                    display.DeviceName, ref devMode, IntPtr.Zero, CDS_UPDATEREGISTRY | CDS_RESET, IntPtr.Zero));
             }
 
             // Process display scale change
-            SetMonitorDpiScale(dispIndex, scale);
+            if (scale > 0) SetMonitorDpiScale(dispIndex, scale);
         }
 
         private DPIScalingInfo GetMonitorDpiScale(LUID adapterId, uint sourceId)
@@ -271,7 +276,7 @@ namespace AdjustDisplay
             StateFlags = display.StateFlags;
             IsDuplicated = false;
             EnumVideoModes();
-            GetCurrentMode();
+            _currentModeIndex = GetCurrentModeIndex();
         }
 
         /// <summary>
@@ -298,22 +303,29 @@ namespace AdjustDisplay
             }
         }
 
-        public void GetCurrentMode()
+        public DEVMODE GetCurrentMode()
         {
             // Get current mode
-            var currMode = new DEVMODE();
-            currMode.Initialize();
+            var currentMode = new DEVMODE();
+            currentMode.Initialize();
 
-            if (!EnumDisplaySettings(DeviceName, ENUM_CURRENT_SETTINGS, ref currMode))
+            if (!EnumDisplaySettings(DeviceName, ENUM_CURRENT_SETTINGS, ref currentMode))
                 throw new InvalidOperationException(LastError);
 
-            var cm = Modes.FirstOrDefault(m =>
-                currMode.dmPelsWidth == m.Width &&
-                currMode.dmPelsHeight == m.Height &&
-                currMode.dmDisplayFrequency == m.Frequency &&
-                currMode.dmBitsPerPel == m.BitsPerPel);
+            return currentMode;
+        }
 
-            if (cm != null) _currentModeIndex = Modes.IndexOf(cm);
+        private int GetCurrentModeIndex()
+        {
+            var currentMode = GetCurrentMode();
+            var cm = Modes.FirstOrDefault(m =>
+                currentMode.dmPelsWidth == m.Width &&
+                currentMode.dmPelsHeight == m.Height &&
+                currentMode.dmDisplayFrequency == m.Frequency &&
+                currentMode.dmBitsPerPel == m.BitsPerPel);
+
+            if (cm != null) return Modes.IndexOf(cm);
+            else return 0;
         }
 
         public override string ToString() 
