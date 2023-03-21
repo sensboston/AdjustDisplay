@@ -42,3 +42,10 @@ Note: any params can be omitted
 
 ## Author's note:
 I can't test every possible configuration (only tested with two monitors), so reports on running different configurations are most welcome! Please submit your reports, bug reports and feature requests to the "Issues"
+
+## Credits:
+I used some code snippets and ideas from these projects, thanks a lot guys!
+
+https://www.codeproject.com/Articles/36664/Changing-Display-Settings-Programmatically
+
+https://github.com/imniko/SetDPI
